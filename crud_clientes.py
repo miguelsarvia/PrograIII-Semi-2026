@@ -1,4 +1,4 @@
-from mysql.connector.errors import Error
+The search was created and delete, modify customers
 import conexion
 
 db = conexion.Conexion()

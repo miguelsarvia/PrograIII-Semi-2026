@@ -202,4 +202,153 @@
     }
 </script>
 
+<!-- Paste under customer form (left column) -->
+<div class="card mt-3" id="panelImpuesto">
+  <div class="card-header">
+    Impuesto actividades económicas
+  </div>
+  <div class="card-body">
+    <div class="input-group mb-2">
+      <select id="impSelect" class="form-select" onchange="elegirClienteImpuesto()">
+        <option value="">-- Seleccione un cliente --</option>
+      </select>
+      <button type="button" class="btn btn-outline-secondary" onclick="cargarClientesImpuesto()" title="Actualizar lista">&#8635;</button>
+    </div>
+    <div class="row g-2">
+      <div class="col">
+        <input id="impMonto" class="form-control" inputmode="decimal" placeholder="Monto (balance)">
+      </div>
+      <div class="col">
+        <label class="form-label small mb-0" for="impDesde">Desde</label>
+        <input id="impDesde" class="form-control" type="date">
+      </div>
+      <div class="col">
+        <label class="form-label small mb-0" for="impHasta">Hasta (no incluido)</label>
+        <input id="impHasta" class="form-control" type="date">
+      </div>
+    </div>
+    <div class="form-check mt-2">
+      <input class="form-check-input" type="checkbox" id="impHistorico">
+      <label class="form-check-label" for="impHistorico">
+        Período histórico (fórmula anterior proporcional, ej. 700 = 2.10)
+      </label>
+    </div>
+    <button type="button" class="btn btn-primary mt-2" onclick="guardarPeriodo()">Calcular y guardar</button>
+    <div id="impMsg" class="mt-2"></div>
+    <table class="table table-sm mt-2">
+      <thead>
+        <tr><th>Desde</th><th>Hasta</th><th>Monto</th><th>Impuesto mensual</th><th></th></tr>
+      </thead>
+      <tbody id="impTabla"></tbody>
+    </table>
+  </div>
+</div>
+ 
+<script>
+let impClienteId = null;
+ 
+function fmtFecha(iso) { return iso.split('-').reverse().join('/'); }
+ 
+// Llamar esta función cuando se selecciona un cliente de la tabla:
+//   seleccionarClienteImpuesto(cliente.idCliente, cliente.nombre)
+function seleccionarClienteImpuesto(id, nombre) {
+  impClienteId = id;
+  document.getElementById('impSelect').value = id;
+  document.getElementById('impMsg').textContent = '';
+  cargarPeriodos();
+}
+ 
+// Llena la lista desplegable con los clientes guardados
+async function cargarClientesImpuesto() {
+  const r = await fetch('/clientes?buscar=');
+  const clientes = await r.json();
+  const sel = document.getElementById('impSelect');
+  sel.length = 1;
+  clientes.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.idCliente;
+    o.textContent = c.codigo + ' - ' + c.nombre + ' (' + c.tipo + ')';
+    sel.appendChild(o);
+  });
+  if (impClienteId) sel.value = impClienteId;
+}
+ 
+function elegirClienteImpuesto() {
+  impClienteId = document.getElementById('impSelect').value || null;
+  document.getElementById('impMsg').textContent = '';
+  cargarPeriodos();
+}
+ 
+cargarClientesImpuesto();
+ 
+function mostrarMensaje(texto, tipo) {
+  const d = document.getElementById('impMsg');
+  d.className = 'mt-2 alert alert-' + tipo;
+  d.textContent = texto;
+}
+ 
+async function cargarPeriodos() {
+  const cuerpo = document.getElementById('impTabla');
+  cuerpo.innerHTML = '';
+  if (!impClienteId) return;
+  const r = await fetch('/periodos?idCliente=' + encodeURIComponent(impClienteId));
+  const filas = await r.json();
+  filas.forEach(p => {
+    const tr = document.createElement('tr');
+    [fmtFecha(p.desde), fmtFecha(p.hasta), p.balance, p.impuestoMensual].forEach(v => {
+      const td = document.createElement('td');
+      td.textContent = v;
+      tr.appendChild(td);
+    });
+    const tdAccion = document.createElement('td');
+    if (!p.facturado) {
+      const b = document.createElement('button');
+      b.className = 'btn btn-danger btn-sm';
+      b.textContent = 'DEL';
+      b.onclick = () => eliminarPeriodo(p.idPeriodo);
+      tdAccion.appendChild(b);
+    }
+    tr.appendChild(tdAccion);
+    cuerpo.appendChild(tr);
+  });
+}
+ 
+async function enviarPeriodo(datos) {
+  const r = await fetch('/periodos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos)
+  });
+  return r.json();
+}
+ 
+async function guardarPeriodo() {
+  if (!impClienteId) { mostrarMensaje('Seleccione un cliente primero.', 'warning'); return; }
+  const res = await enviarPeriodo({
+    accion: 'nuevo',
+    idCliente: impClienteId,
+    monto: document.getElementById('impMonto').value,
+    fechaDesde: document.getElementById('impDesde').value,
+    fechaHasta: document.getElementById('impHasta').value,
+    formula: document.getElementById('impHistorico').checked ? 'proporcional' : 'bloques'
+  });
+  if (!res.ok) {
+    mostrarMensaje(res.msg, 'danger');
+    if (res.msg.includes('no encontrado')) cargarClientesImpuesto();
+    return;
+  }
+  let texto = 'Impuesto mensual: ' + res.impuestoMensual;
+  if (res.avisos && res.avisos.length) texto += ' | ' + res.avisos.join(' ');
+  mostrarMensaje(texto, res.avisos && res.avisos.length ? 'warning' : 'success');
+  cargarPeriodos();
+}
+ 
+async function eliminarPeriodo(id) {
+  if (!confirm('¿Eliminar este período?')) return;
+  const res = await enviarPeriodo({ accion: 'eliminar', idPeriodo: id });
+  if (!res.ok) { mostrarMensaje(res.msg, 'danger'); return; }
+  cargarPeriodos();
+}
+</script>
+ 
 </html>

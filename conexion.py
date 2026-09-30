@@ -6,8 +6,9 @@ class Conexion:
     def __init__(self):
         self.host = "localhost"
         self.user = "root"
-        self.password = ""
+        self.password = "5870"
         self.database = "db_sistema_impuestos"
+
         print("Conectando a la base de datos...")
 
         try:
@@ -15,14 +16,18 @@ class Conexion:
                 host=self.host,
                 user=self.user,
                 password=self.password,
-                database=self.database
+                database=self.database,
+                use_pure=True
             )
+
             if self.conexion.is_connected():
                 print("Conexion exitosa")
             else:
                 print("No se pudo conectar a la base de datos")
-        except Error as e:
-            print(f"Error al conectar a la base de datos: {e}")
+
+        except Exception as e:
+            print(f"ERROR REAL DE CONEXION: {type(e).__name__}")
+            print(f"DETALLE: {e}")
 
     def consultar(self, sql):
         try:
@@ -42,6 +47,3 @@ class Conexion:
         except Error as e:
             print(f"Error al ejecutar la consulta: {e}")
             return f'Error: {e}'
-    
-        
-    

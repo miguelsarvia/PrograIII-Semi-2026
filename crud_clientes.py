@@ -1,4 +1,4 @@
-The search was created and delete, modify customers
+
 import conexion
 
 db = conexion.Conexion()

@@ -35,14 +35,25 @@ def _periodo(f) -> imp.Periodo:
     )
  
  
+def _estado(p: imp.Periodo) -> str:
+    hoy = date.today()
+    if p.hasta <= hoy:
+        return "Histórico"
+    if p.desde <= hoy:
+        return "Vigente según fecha"
+    return "Futuro"
+ 
+ 
 def _a_json(f) -> dict:
     p = _periodo(f)
     return {
         "idPeriodo": f["idPeriodo"],
         "desde": p.desde.isoformat(),
         "hasta": p.hasta.isoformat(),           # exclusivo: no se cobra ese día
-        "balance": str(p.balance),
+        "balance": str(imp.redondear(p.balance)),
+        "codigo": p.producto,
         "impuestoMensual": str(p.precio_mostrado),
+        "estado": _estado(p),
         "facturado": p.facturado,
     }
  

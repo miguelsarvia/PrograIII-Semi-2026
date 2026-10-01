@@ -237,7 +237,7 @@
     <div id="impMsg" class="mt-2"></div>
     <table class="table table-sm mt-2">
       <thead>
-        <tr><th>Desde</th><th>Hasta</th><th>Monto</th><th>Impuesto mensual</th><th></th></tr>
+        <tr><th>Desde</th><th>Hasta</th><th>Balance</th><th>Código</th><th>Precio</th><th>Estado</th><th></th></tr>
       </thead>
       <tbody id="impTabla"></tbody>
     </table>
@@ -295,7 +295,7 @@ async function cargarPeriodos() {
   const filas = await r.json();
   filas.forEach(p => {
     const tr = document.createElement('tr');
-    [fmtFecha(p.desde), fmtFecha(p.hasta), p.balance, p.impuestoMensual].forEach(v => {
+    [fmtFecha(p.desde), fmtFecha(p.hasta), '$' + p.balance, p.codigo, '$' + p.impuestoMensual, p.estado].forEach(v => {
       const td = document.createElement('td');
       td.textContent = v;
       tr.appendChild(td);
@@ -350,5 +350,6 @@ async function eliminarPeriodo(id) {
   cargarPeriodos();
 }
 </script>
+ 
  
 </html>

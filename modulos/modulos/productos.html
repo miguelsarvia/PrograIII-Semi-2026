@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar productos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <main class="container py-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h3 mb-0">Administrar productos</h1>
+            <a class="btn btn-outline-secondary" href="/">Volver al inicio</a>
+        </div>
+
+        <form id="frmProducto" class="card mb-4">
+            <div class="card-header">Datos del producto</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label for="txtCodigoProducto" class="form-label">Código</label>
+                        <input pattern="^[0-9]{3,10}$" required placeholder="Código" name="txtCodigoProducto"
+                            id="txtCodigoProducto" class="form-control" type="text">
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <label for="txtDescripcionProducto" class="form-label">Descripción</label>
+                        <input pattern="^[A-Za-záéíóúÁÉÍÓÚñÑ ]{3,}$" required placeholder="Descripción"
+                            name="txtDescripcionProducto" id="txtDescripcionProducto" class="form-control" type="text">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="cboEstadoProducto" class="form-label">Estado</label>
+                        <select name="cboEstadoProducto" id="cboEstadoProducto" class="form-select">
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" id="btnBuscarProducto">Buscar</button>
+                <button type="reset" class="btn btn-warning">Limpiar</button>
+            </div>
+        </form>
+
+        <section class="card">
+            <div class="card-header">Productos registrados</div>
+            <div class="card-body">
+                <label for="txtBuscarProducto" class="form-label">Buscar por código o descripción</label>
+                <input type="search" placeholder="Buscar productos" id="txtBuscarProducto" class="form-control mb-3">
+                <div id="mensajeProductos" class="alert alert-danger d-none" role="alert"></div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblProductos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (() => {
+            const form = document.getElementById('frmProducto');
+            const codigo = document.getElementById('txtCodigoProducto');
+            const descripcion = document.getElementById('txtDescripcionProducto');
+            const estado = document.getElementById('cboEstadoProducto');
+            const buscar = document.getElementById('txtBuscarProducto');
+            const tabla = document.getElementById('tblProductos');
+            const mensaje = document.getElementById('mensajeProductos');
+            let accion = 'nuevo';
+            let idProducto = '';
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                await guardarProducto();
+            });
+            form.addEventListener('reset', () => {
+                accion = 'nuevo';
+                idProducto = '';
+            });
+            buscar.addEventListener('input', () => cargarProductos(buscar.value));
+            document.getElementById('btnBuscarProducto').addEventListener('click', () => {
+                buscar.focus();
+                buscar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            async function cargarProductos(termino = '') {
+                try {
+                    const response = await fetch(`/productos?buscar=${encodeURIComponent(termino)}`);
+                    if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+                    const productos = await response.json();
+                    tabla.replaceChildren();
+                    ocultarError();
+
+                    productos.forEach((producto) => {
+                        const fila = tabla.insertRow();
+                        [producto.codigo, producto.descripcion, producto.estado].forEach((valor) => {
+                            fila.insertCell().textContent = valor;
+                        });
+
+                        const acciones = fila.insertCell();
+                        acciones.className = 'text-nowrap';
+                        const botonEditar = document.createElement('button');
+                        botonEditar.type = 'button';
+                        botonEditar.className = 'btn btn-sm btn-outline-primary me-1';
+                        botonEditar.textContent = 'Editar';
+                        botonEditar.addEventListener('click', () => editarProducto(producto));
+                        acciones.appendChild(botonEditar);
+
+                        const botonEliminar = document.createElement('button');
+                        botonEliminar.type = 'button';
+                        botonEliminar.className = 'btn btn-sm btn-danger';
+                        botonEliminar.textContent = 'Eliminar';
+                        botonEliminar.addEventListener('click', () => eliminarProducto(producto));
+                        acciones.appendChild(botonEliminar);
+                    });
+                } catch (error) {
+                    mostrarError(`No se pudieron cargar los productos: ${error.message}`);
+                }
+            }
+
+            async function guardarProducto(datos = {
+                modulo: 'producto',
+                codigo: codigo.value,
+                descripcion: descripcion.value,
+                estado: estado.value,
+                accion,
+                idProducto
+            }) {
+                try {
+                    const response = await fetch('/producto', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datos)
+                    });
+                    if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+                    const resultado = await response.json();
+                    if (resultado.msg !== 'ok') {
+                        mostrarError(`No se pudo guardar el producto: ${resultado.msg}`);
+                        return;
+                    }
+                    ocultarError();
+                    form.reset();
+                    await cargarProductos(buscar.value);
+                } catch (error) {
+                    mostrarError(`No se pudo guardar el producto: ${error.message}`);
+                }
+            }
+
+            function editarProducto(producto) {
+                idProducto = producto.idProducto;
+                accion = 'modificar';
+                codigo.value = producto.codigo;
+                descripcion.value = producto.descripcion;
+                estado.value = producto.estado;
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            async function eliminarProducto(producto) {
+                if (!confirm(`¿Seguro de eliminar el producto "${producto.descripcion}"?`)) return;
+                await guardarProducto({
+                    modulo: 'producto',
+                    accion: 'eliminar',
+                    idProducto: producto.idProducto
+                });
+            }
+
+            function mostrarError(texto) {
+                mensaje.textContent = texto;
+                mensaje.classList.remove('d-none');
+            }
+
+            function ocultarError() {
+                mensaje.textContent = '';
+                mensaje.classList.add('d-none');
+            }
+
+            cargarProductos();
+        })();
+    </script>
+</body>
+
+</html>

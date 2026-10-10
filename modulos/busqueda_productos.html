@@ -1,0 +1,76 @@
+<form id="frmConsultarProducto">
+    <div class="card text-bg-dark mb-3" style="min-width: 600px;">
+        <div class="card-header">
+            <div class="d-flex">
+                Busqueda de Productos
+                <div class="ms-auto">
+                    <button data-form="busqueda_productos" type="button" class="btn-close btn-close-white"
+                        aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th colspan="7">
+                                        <input type="search" placeholder="buscar por codigo, nombre"
+                                            id="txtBuscarProducto" name="txtBuscarProducto" class="form-control">
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Descripcion</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblProductos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    txtBuscarProducto.addEventListener('keyup', (e) => {
+        e.preventDefault();
+        obtenerProductos(txtBuscarProducto.value);
+    });
+    obtenerProductos();
+
+    async function obtenerProductos(buscar = "") {
+        let response = await fetch(`/productos?buscar=${buscar}`),
+            datos = await response.json();
+        mostrarDatos(datos);
+    }
+    function mostrarDatos(datos) {
+        let filas = "";
+        datos.forEach(e => {
+            filas += `
+                <tr onClick='modificarProducto(${JSON.stringify(e)}, event)'>
+                    <td>${e.codigo}</td>
+                    <td>${e.descripcion}</td>
+                    <td>${e.estado}</td>
+                    <td>
+                        <input onClick='eliminarProducto(${JSON.stringify(e)}, event)' 
+                            type="button" value="DEL" class="btn btn-danger"/>
+                    </td>
+                </tr>
+            `;
+        });
+        tblProductos.innerHTML = filas;
+    }
+    function eliminarProducto(data, event) {
+        event.preventDefault();
+        if (confirm(`¿Seguro de eliminar al producto: ${data.descripcion}?`)) {
+            idProducto = data.idProducto;
+            accion = "eliminar";
+            guardarProductos();
+        }
+    }
+</script>

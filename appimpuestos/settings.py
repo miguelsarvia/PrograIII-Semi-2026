@@ -54,7 +54,7 @@ ROOT_URLCONF = 'appimpuestos.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'appimpuestos/plantillas'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

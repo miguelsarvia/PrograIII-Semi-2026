@@ -12,6 +12,7 @@
     <main class="container py-4">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h1 class="h3 mb-0">Administrar usuarios</h1>
+            <a class="btn btn-outline-primary" href="/login.html">Probar inicio de sesión</a>
         </div>
 
         <form id="frmUsuario" class="card text-bg-dark mb-4">
@@ -24,8 +25,19 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label for="txtClave" class="form-label">Clave</label>
-                        <input id="txtClave" class="form-control" type="password" maxlength="35"
-                            placeholder="Obligatoria al crear; vacía conserva la actual">
+                        <div class="input-group">
+                            <input id="txtClave" class="form-control" type="password" maxlength="35"
+                                placeholder="Obligatoria al crear; vacía conserva la actual">
+                            <button id="btnVerClave" class="btn btn-outline-light" type="button"
+                                aria-label="Mostrar clave" aria-pressed="false">
+                                <svg class="icono-ojo" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <label for="txtNombre" class="form-label">Nombre</label>
@@ -83,8 +95,19 @@
             const buscar = document.getElementById('txtBuscarUsuario');
             const tabla = document.getElementById('tblUsuarios');
             const mensaje = document.getElementById('mensajeUsuarios');
+            const btnVerClave = document.getElementById('btnVerClave');
             let accion = 'nuevo';
             let idUsuario = '';
+
+            btnVerClave.addEventListener('click', () => {
+                const mostrar = clave.type === 'password';
+                clave.type = mostrar ? 'text' : 'password';
+                btnVerClave.setAttribute('aria-label', mostrar ? 'Ocultar clave' : 'Mostrar clave');
+                btnVerClave.setAttribute('aria-pressed', String(mostrar));
+                btnVerClave.innerHTML = mostrar
+                    ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a15.5 15.5 0 0 1-4 4.7"></path><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1 0 1.9-.2 2.8-.5"></path></svg>'
+                    : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            });
 
             form.addEventListener('submit', async (evento) => {
                 evento.preventDefault();
@@ -115,7 +138,7 @@
                         const botonEditar = document.createElement('button');
                         botonEditar.type = 'button';
                         botonEditar.className = 'btn btn-sm btn-outline-primary me-1';
-                        botonEditar.textContent = 'Editar';
+                        botonEditar.textContent = 'Modificar';
                         botonEditar.addEventListener('click', () => editarUsuario(dato));
                         acciones.appendChild(botonEditar);
 
@@ -168,7 +191,7 @@
                 idUsuario = dato.idUsuario;
                 accion = 'modificar';
                 usuario.value = dato.usuario;
-                clave.value = '';
+                clave.value = dato.clave;
                 nombre.value = dato.nombre;
                 direccion.value = dato.direccion;
                 telefono.value = dato.telefono;

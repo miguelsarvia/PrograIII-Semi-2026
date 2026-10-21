@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probar inicio de sesión</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-7 col-lg-5">
+                <form id="frmLogin" class="card text-bg-dark">
+                    <div class="card-header">Probar inicio de sesión</div>
+                    <div class="card-body">
+                        <p>Ingresa un usuario creado para verificar sus credenciales.</p>
+                        <label for="txtUsuarioLogin" class="form-label">Usuario</label>
+                        <input id="txtUsuarioLogin" class="form-control mb-3" maxlength="35" required>
+                        <label for="txtClaveLogin" class="form-label">Clave</label>
+                        <div class="input-group">
+                            <input id="txtClaveLogin" class="form-control" type="password" maxlength="35" required>
+                            <button id="btnVerClaveLogin" class="btn btn-outline-light" type="button"
+                                aria-label="Mostrar clave" aria-pressed="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="mensajeLogin" class="alert d-none mt-3 mb-0" role="status"></div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a class="btn btn-outline-light" href="/modulos/usuarios.html">Volver a usuarios</a>
+                        <button class="btn btn-primary" type="submit">Iniciar sesión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const formulario = document.getElementById('frmLogin');
+        const mensaje = document.getElementById('mensajeLogin');
+        const clave = document.getElementById('txtClaveLogin');
+        const botonVerClave = document.getElementById('btnVerClaveLogin');
+
+        botonVerClave.addEventListener('click', () => {
+            const mostrar = clave.type === 'password';
+            clave.type = mostrar ? 'text' : 'password';
+            botonVerClave.setAttribute('aria-label', mostrar ? 'Ocultar clave' : 'Mostrar clave');
+            botonVerClave.setAttribute('aria-pressed', String(mostrar));
+            botonVerClave.innerHTML = mostrar
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a15.5 15.5 0 0 1-4 4.7"></path><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1 0 1.9-.2 2.8-.5"></path></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        });
+
+        formulario.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+            mensaje.className = 'alert d-none mt-3 mb-0';
+            mensaje.textContent = '';
+
+            try {
+                const respuesta = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        usuario: document.getElementById('txtUsuarioLogin').value,
+                        clave: clave.value
+                    })
+                });
+                const resultado = await respuesta.json();
+                if (!respuesta.ok || !resultado.ok) {
+                    throw new Error(resultado.msg || `Error HTTP ${respuesta.status}`);
+                }
+                mensaje.textContent = `${resultado.msg} Bienvenido, ${resultado.nombre}.`;
+                mensaje.className = 'alert alert-success mt-3 mb-0';
+            } catch (error) {
+                mensaje.textContent = error.message;
+                mensaje.className = 'alert alert-danger mt-3 mb-0';
+            }
+        });
+    </script>
+</body>
+
+</html>

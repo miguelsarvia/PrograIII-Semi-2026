@@ -30,6 +30,29 @@ class miServidor(SimpleHTTPRequestHandler):
             self._responder_json({"ok": False, "msg": "El cuerpo debe ser JSON válido."}, 400)
             return
 
+        if ruta == "/login":
+            try:
+                usuario = crudUsuarios.autenticar(
+                    datos.get("usuario", ""),
+                    datos.get("clave", ""),
+                )
+            except RuntimeError as error:
+                self._responder_json({"ok": False, "msg": str(error)}, 500)
+                return
+            if not usuario:
+                self._responder_json(
+                    {"ok": False, "msg": "Usuario o clave incorrectos."},
+                    401,
+                )
+                return
+            self._responder_json({
+                "ok": True,
+                "msg": "Inicio de sesión con éxito.",
+                "usuario": usuario["usuario"],
+                "nombre": usuario["nombre"],
+            })
+            return
+
         if ruta != "/usuarios":
             self._responder_json({"ok": False, "msg": "Ruta no encontrada."}, 404)
             return

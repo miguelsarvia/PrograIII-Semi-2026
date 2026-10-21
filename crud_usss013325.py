@@ -17,7 +17,7 @@ class crud_usss013325:
         termino = f"%{str(buscar).strip()}%"
         return self._consultar(
             """
-            SELECT idUsuario, usuario, nombre, direccion, telefono
+            SELECT idUsuario, usuario, clave, nombre, direccion, telefono
             FROM usuarios_usss013325
             WHERE usuario LIKE %s OR nombre LIKE %s OR direccion LIKE %s
                 OR telefono LIKE %s
@@ -25,6 +25,17 @@ class crud_usss013325:
             """,
             (termino, termino, termino, termino),
         )
+
+    def autenticar(self, usuario, clave):
+        filas = self._consultar(
+            """
+            SELECT idUsuario, usuario, nombre
+            FROM usuarios_usss013325
+            WHERE usuario=%s AND clave=%s
+            """,
+            (str(usuario).strip(), str(clave)),
+        )
+        return filas[0] if filas else None
 
     def administrar(self, datos):
         try:

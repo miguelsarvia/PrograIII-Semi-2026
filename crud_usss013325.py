@@ -26,21 +26,6 @@ class crud_usss013325:
             (termino, termino, termino, termino),
         )
 
-    def cantidad(self):
-        filas = self._consultar("SELECT COUNT(*) AS total FROM usuarios_usss013325")
-        return int(filas[0]["total"])
-
-    def autenticar(self, usuario, clave):
-        filas = self._consultar(
-            """
-            SELECT idUsuario, usuario, nombre
-            FROM usuarios_usss013325
-            WHERE usuario=%s AND clave=%s
-            """,
-            (str(usuario).strip(), str(clave)),
-        )
-        return filas[0] if filas else None
-
     def administrar(self, datos):
         try:
             accion = datos.get("accion")

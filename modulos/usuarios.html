@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar usuarios</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <main class="container py-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h3 mb-0">Administrar usuarios</h1>
+            <a class="btn btn-outline-secondary" href="/index.html">Volver al inicio</a>
+        </div>
+
+        <form id="frmUsuario" class="card mb-4">
+            <div class="card-header">Datos del usuario</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label for="txtUsuario" class="form-label">Usuario</label>
+                        <input id="txtUsuario" class="form-control" maxlength="35" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="txtClave" class="form-label">Clave</label>
+                        <input id="txtClave" class="form-control" type="password" maxlength="35"
+                            placeholder="Obligatoria al crear; vacía conserva la actual">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="txtNombre" class="form-label">Nombre</label>
+                        <input id="txtNombre" class="form-control" maxlength="85" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="txtDireccion" class="form-label">Dirección</label>
+                        <input id="txtDireccion" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="txtTelefono" class="form-label">Teléfono</label>
+                        <input id="txtTelefono" class="form-control" maxlength="9" required>
+                    </div>
+                </div>
+                <div id="mensajeUsuarios" class="alert d-none mt-3" role="status"></div>
+            </div>
+            <div class="card-footer text-center">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="reset" class="btn btn-warning">Limpiar</button>
+            </div>
+        </form>
+
+        <section class="card">
+            <div class="card-header">Usuarios registrados</div>
+            <div class="card-body">
+                <label for="txtBuscarUsuario" class="form-label">Buscar por usuario, nombre, dirección o teléfono</label>
+                <input id="txtBuscarUsuario" type="search" class="form-control mb-3"
+                    placeholder="Buscar usuarios">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre</th>
+                                <th>Dirección</th>
+                                <th>Teléfono</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblUsuarios"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (() => {
+            const form = document.getElementById('frmUsuario');
+            const usuario = document.getElementById('txtUsuario');
+            const clave = document.getElementById('txtClave');
+            const nombre = document.getElementById('txtNombre');
+            const direccion = document.getElementById('txtDireccion');
+            const telefono = document.getElementById('txtTelefono');
+            const buscar = document.getElementById('txtBuscarUsuario');
+            const tabla = document.getElementById('tblUsuarios');
+            const mensaje = document.getElementById('mensajeUsuarios');
+            let accion = 'nuevo';
+            let idUsuario = '';
+
+            form.addEventListener('submit', async (evento) => {
+                evento.preventDefault();
+                await guardarUsuario();
+            });
+            form.addEventListener('reset', () => {
+                accion = 'nuevo';
+                idUsuario = '';
+            });
+            buscar.addEventListener('input', () => cargarUsuarios(buscar.value));
+            document.addEventListener('DOMContentLoaded', () => cargarUsuarios());
+
+            async function cargarUsuarios(termino = '') {
+                try {
+                    const respuesta = await fetch(`/usuarios?buscar=${encodeURIComponent(termino)}`);
+                    if (!respuesta.ok) throw new Error(`Error HTTP ${respuesta.status}`);
+                    const usuarios = await respuesta.json();
+                    tabla.replaceChildren();
+
+                    usuarios.forEach((dato) => {
+                        const fila = tabla.insertRow();
+                        [dato.usuario, dato.nombre, dato.direccion, dato.telefono].forEach((valor) => {
+                            fila.insertCell().textContent = valor;
+                        });
+                        const acciones = fila.insertCell();
+                        acciones.className = 'text-nowrap';
+
+                        const botonEditar = document.createElement('button');
+                        botonEditar.type = 'button';
+                        botonEditar.className = 'btn btn-sm btn-outline-primary me-1';
+                        botonEditar.textContent = 'Editar';
+                        botonEditar.addEventListener('click', () => editarUsuario(dato));
+                        acciones.appendChild(botonEditar);
+
+                        const botonEliminar = document.createElement('button');
+                        botonEliminar.type = 'button';
+                        botonEliminar.className = 'btn btn-sm btn-danger';
+                        botonEliminar.textContent = 'Eliminar';
+                        botonEliminar.addEventListener('click', () => eliminarUsuario(dato));
+                        acciones.appendChild(botonEliminar);
+                    });
+                    if (mensaje.classList.contains('alert-danger')) ocultarError();
+                } catch (error) {
+                    mostrarMensaje(`No se pudieron cargar los usuarios: ${error.message}`, 'danger');
+                }
+            }
+
+            async function guardarUsuario(datos = {
+                usuario: usuario.value,
+                clave: clave.value,
+                nombre: nombre.value,
+                direccion: direccion.value,
+                telefono: telefono.value,
+                accion,
+                idUsuario
+            }) {
+                try {
+                    const respuesta = await fetch('/usuarios', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datos)
+                    });
+                    const resultado = await respuesta.json();
+                    if (!respuesta.ok || !resultado.ok) {
+                        throw new Error(resultado.msg || `Error HTTP ${respuesta.status}`);
+                    }
+                    form.reset();
+                    await cargarUsuarios(buscar.value);
+                    const mensajes = {
+                        nuevo: 'Usuario creado con éxito.',
+                        modificar: 'Usuario actualizado con éxito.',
+                        eliminar: 'Usuario eliminado con éxito.'
+                    };
+                    mostrarMensaje(mensajes[datos.accion], 'success');
+                } catch (error) {
+                    mostrarMensaje(`No se pudo guardar el usuario: ${error.message}`, 'danger');
+                }
+            }
+
+            function editarUsuario(dato) {
+                idUsuario = dato.idUsuario;
+                accion = 'modificar';
+                usuario.value = dato.usuario;
+                clave.value = '';
+                nombre.value = dato.nombre;
+                direccion.value = dato.direccion;
+                telefono.value = dato.telefono;
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            async function eliminarUsuario(dato) {
+                if (!confirm(`¿Seguro de eliminar al usuario "${dato.usuario}"?`)) return;
+                await guardarUsuario({ accion: 'eliminar', idUsuario: dato.idUsuario });
+            }
+
+            function mostrarMensaje(texto, tipo) {
+                mensaje.textContent = texto;
+                mensaje.className = `alert alert-${tipo} mt-3`;
+            }
+
+            function ocultarError() {
+                mensaje.textContent = '';
+                mensaje.className = 'alert d-none mt-3';
+            }
+        })();
+    </script>
+</body>
+
+</html>

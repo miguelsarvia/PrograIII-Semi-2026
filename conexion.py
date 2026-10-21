@@ -29,10 +29,10 @@ class Conexion:
             print(f"ERROR REAL DE CONEXION: {type(e).__name__}")
             print(f"DETALLE: {e}")
 
-    def consultar(self, sql):
+    def consultar(self, sql, datos=None):
         try:
             cursor = self.conexion.cursor(dictionary=True)
-            cursor.execute(sql)
+            cursor.execute(sql, datos or ())
             return cursor.fetchall()
         except Error as e:
             print(f"Error al consultar la base de datos: {e}")

@@ -1,0 +1,127 @@
+<form id="frmCliente">
+    <div class="card text-bg-dark mb-3" style="min-width: 600px;">
+        <div class="card-header">
+            <div class="d-flex">
+                Admin de Clientes
+                <div class="ms-auto">
+                    <button data-form="clientes" type="button" class="btn-close btn-close-white"
+                        aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row p-1">
+                <div class="col-12 col-md-4">
+                    <input pattern="^[0-9]{3,10}$" required placeholder="Codigo" name="txtCodigoCliente"
+                        id="txtCodigoCliente" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12 col-md-8">
+                    <input pattern="^[A-Za-záéíóúÁÉÍÓÚñÑ ]{3,}$" required placeholder="Nombre" name="txtNombreCliente"
+                        id="txtNombreCliente" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12">
+                    <input placeholder="Direccion" name="txtDireccionCliente" id="txtDireccionCliente"
+                        class="form-control" type="text">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12 col-md-4">
+                    <input pattern="^[0-9]{4}-[0-9]{4}$" placeholder="Telefono" name="txtTelefonoCliente"
+                        id="txtTelefonoCliente" class="form-control" type="text">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12 col-md-8">
+                    <input placeholder="Email" name="txtEmailCliente" id="txtEmailCliente" class="form-control"
+                        type="email">
+                </div>
+            </div>
+            <div class="row p-1">
+                <div class="col-12 col-md-6">
+                    <select class="form-control" name="cboTipoPersona" id="cboTipoPersona">
+                        <option value="particular">Particular</option>
+                        <option value="empresa">Empresa</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <input type="submit" value="Guardar" class="btn btn-primary" id="btnGuardarCliente">
+            <input type="button" value="Buscar" class="btn btn-secondary" id="btnBuscarCliente">
+            <input type="reset" value="Limpiar" class="btn btn-warning" id="btnLimpiarCliente">
+        </div>
+    </div>
+</form>
+<script>
+    var accion = 'nuevo',
+        idCliente = '';
+
+    frmCliente.addEventListener('submit', (e) => {
+        e.preventDefault();
+        guardarClientes();
+
+    });
+    frmCliente.addEventListener('reset', (e) => {
+        e.preventDefault();
+        limpiarFormulario();
+    });
+
+
+    function modificarCliente(data, event) {
+        event.preventDefault();
+        idCliente = data.idCliente;
+        accion = "modificar";
+
+        txtCodigoCliente.value = data.codigo;
+        txtNombreCliente.value = data.nombre;
+        txtDireccionCliente.value = data.direccion;
+        txtTelefonoCliente.value = data.telefono;
+        txtEmailCliente.value = data.email;
+        cboTipoPersona.value = data.tipo;
+    }
+
+    async function guardarClientes() {
+        let datos = {
+            modulo: "cliente",
+            codigo: txtCodigoCliente.value,
+            nombre: txtNombreCliente.value,
+            direccion: txtDireccionCliente.value,
+            telefono: txtTelefonoCliente.value,
+            email: txtEmailCliente.value,
+            tipo: cboTipoPersona.value,
+            accion,
+            idCliente
+        };
+        let response = await fetch('guardar_cliente/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datos)
+        }), respuesta = await response.json();
+        if (respuesta.msg != "ok") {
+            alert("Error: " + respuesta.msg);
+            return;
+        }
+        obtenerClientes();
+        limpiarFormulario();
+    }
+    function limpiarFormulario() {
+        accion = 'nuevo';
+        idCliente = '';
+        txtCodigoCliente.value = '';
+        txtNombreCliente.value = '';
+        txtDireccionCliente.value = '';
+        txtTelefonoCliente.value = '';
+        txtEmailCliente.value = '';
+        cboTipoPersona.value = 'particular';
+    }
+    btnBuscarCliente.addEventListener('click', (e) => {
+        e.preventDefault();
+        cargarForm('busqueda_clientes');
+    });
+</script>

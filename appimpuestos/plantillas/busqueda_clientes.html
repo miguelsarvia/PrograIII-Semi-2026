@@ -1,0 +1,82 @@
+<form id="frmConsultarCliente">
+    <div class="card text-bg-dark mb-3" style="min-width: 600px;">
+        <div class="card-header">
+            <div class="d-flex">
+                Busqueda de Clientes
+                <div class="ms-auto">
+                    <button data-form="busqueda_clientes" type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th colspan="7">
+                                        <input type="search" placeholder="buscar por codigo, nombre"
+                                            id="txtBuscarCliente" name="txtBuscarCliente"
+                                            class="form-control">
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Nombre</th>
+                                    <th>Direccion</th>
+                                    <th>Telefono</th>
+                                    <th>Email</th>
+                                    <th>Tipo</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblClientes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    txtBuscarCliente.addEventListener('keyup', (e) => {
+        e.preventDefault();
+        obtenerClientes(txtBuscarCliente.value);
+    });
+    obtenerClientes();
+
+    async function obtenerClientes(buscar = "") {
+        let response = await fetch(`/buscar_clientes/${buscar}`),
+            datos = await response.json();
+        mostrarDatos(datos);
+    }
+    function mostrarDatos(datos) {
+        let filas = "";
+        datos.forEach(e => {
+            filas += `
+                <tr onClick='modificarCliente(${JSON.stringify(e)}, event)'>
+                    <td>${e.codigo}</td>
+                    <td>${e.nombre}</td>
+                    <td>${e.direccion}</td>
+                    <td>${e.telefono}</td>
+                    <td>${e.email}</td>
+                    <td>${e.tipo}</td>
+                    <td>
+                        <input onClick='eliminarCliente(${JSON.stringify(e)}, event)' 
+                            type="button" value="DEL" class="btn btn-danger"/>
+                    </td>
+                </tr>
+            `;
+        });
+        tblClientes.innerHTML = filas;
+    }
+    function eliminarCliente(data, event) {
+        event.preventDefault();
+        if (confirm(`¿Seguro de eliminar al cliente: ${data.nombre}?`)) {
+            idCliente = data.idCliente;
+            accion = "eliminar";
+            guardarClientes();
+        }
+    }
+</script>

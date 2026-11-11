@@ -58,7 +58,7 @@
 </form>
 <script>
     var accion = 'nuevo',
-        idCliente = '';
+        id = '';
 
     frmCliente.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -73,7 +73,7 @@
 
     function modificarCliente(data, event) {
         event.preventDefault();
-        idCliente = data.idCliente;
+        id = data.id;
         accion = "modificar";
 
         txtCodigoCliente.value = data.codigo;
@@ -94,7 +94,7 @@
             email: txtEmailCliente.value,
             tipo: cboTipoPersona.value,
             accion,
-            idCliente
+            id
         };
         let response = await fetch('guardar_cliente/', {
             method: 'POST',
@@ -112,7 +112,7 @@
     }
     function limpiarFormulario() {
         accion = 'nuevo';
-        idCliente = '';
+        id = '';
         txtCodigoCliente.value = '';
         txtNombreCliente.value = '';
         txtDireccionCliente.value = '';

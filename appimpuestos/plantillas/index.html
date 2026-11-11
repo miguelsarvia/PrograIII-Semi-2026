@@ -39,6 +39,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", events=>{
+            let nivel = 1;
+            $('.position-absolute').on('click', function(){ $(this).css('z-index', ++nivel); });
             mnxImpuestos.addEventListener('click',e=>{
                 e.preventDefault();
                 let form = e.target.dataset.form;

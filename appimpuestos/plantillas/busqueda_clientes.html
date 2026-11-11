@@ -4,7 +4,8 @@
             <div class="d-flex">
                 Busqueda de Clientes
                 <div class="ms-auto">
-                    <button data-form="busqueda_clientes" type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+                    <button data-form="busqueda_clientes" type="button" class="btn-close btn-close-white"
+                        aria-label="Close"></button>
                 </div>
             </div>
         </div>
@@ -17,8 +18,7 @@
                                 <tr>
                                     <th colspan="7">
                                         <input type="search" placeholder="buscar por codigo, nombre"
-                                            id="txtBuscarCliente" name="txtBuscarCliente"
-                                            class="form-control">
+                                            id="txtBuscarCliente" name="txtBuscarCliente" class="form-control">
                                     </th>
                                 </tr>
                                 <tr>
@@ -47,13 +47,13 @@
     obtenerClientes();
 
     async function obtenerClientes(buscar = "") {
-        let response = await fetch(`/buscar_clientes/${buscar}`),
+        let response = await fetch(`busqueda_clientes/?buscar=${buscar}`),
             datos = await response.json();
         mostrarDatos(datos);
     }
-    function mostrarDatos(datos) {
+    function mostrarDatos(alumnos) {
         let filas = "";
-        datos.forEach(e => {
+        alumnos.datos.forEach(e => {
             filas += `
                 <tr onClick='modificarCliente(${JSON.stringify(e)}, event)'>
                     <td>${e.codigo}</td>
@@ -74,7 +74,7 @@
     function eliminarCliente(data, event) {
         event.preventDefault();
         if (confirm(`¿Seguro de eliminar al cliente: ${data.nombre}?`)) {
-            idCliente = data.idCliente;
+            id = data.id;
             accion = "eliminar";
             guardarClientes();
         }

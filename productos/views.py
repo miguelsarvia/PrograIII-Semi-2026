@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse,JsonResponse 
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from .models import productos
 
 # Create your views here.
@@ -11,7 +12,7 @@ def vistas(request, form):
 
 def busqueda_productos(request):
     buscar = request.GET.get("buscar")
-    datos = productos.objects.filter(nombre__icontains=buscar).values()
+    datos = productos.objects.filter(Q(codigo__icontains=buscar) | Q(nombre__icontains=buscar)).values()
     return JsonResponse({'datos': list(datos)})
 
 @csrf_exempt

@@ -72,11 +72,16 @@
         tblClientes.innerHTML = filas;
     }
     function eliminarCliente(data, event) {
-        event.preventDefault();
-        if (confirm(`¿Seguro de eliminar al cliente: ${data.nombre}?`)) {
-            id = data.id;
-            accion = "eliminar";
-            guardarClientes();
-        }
+        event.stopPropagation();
+        alertify.confirm('Eliminando clientes', `¿Seguro de eliminar el cliente: ${data.nombre}?`, 
+            e=>{
+                id = data.id;
+                accion = "eliminar";
+                guardarClientes();
+            },
+            e=>{
+                alertify.error("Operación cancelada");     
+            }
+        );
     }
 </script>

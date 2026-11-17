@@ -67,7 +67,7 @@
     });
     frmCliente.addEventListener('reset', (e) => {
         e.preventDefault();
-        limpiarFormulario();
+        limpiarCliente();
     });
 
 
@@ -82,6 +82,8 @@
         txtTelefonoCliente.value = data.telefono;
         txtEmailCliente.value = data.email;
         cboTipoPersona.value = data.tipo;
+
+        alertify.success("Datos de clientes mostrardos con exito.");
     }
 
     async function guardarClientes() {
@@ -104,13 +106,14 @@
             body: JSON.stringify(datos)
         }), respuesta = await response.json();
         if (respuesta.msg != "ok") {
-            alert("Error: " + respuesta.msg);
+            alertify.error(`Error al guardar clientes ${respuesta.msg}`);
             return;
         }
         obtenerClientes();
-        limpiarFormulario();
+        limpiarCliente();
+        alertify.success('Cliente guardado con exito.');
     }
-    function limpiarFormulario() {
+    function limpiarCliente() {
         accion = 'nuevo';
         id = '';
         txtCodigoCliente.value = '';
